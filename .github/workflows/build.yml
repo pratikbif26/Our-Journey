@@ -1,23 +1,36 @@
-name: Build Android APK
+name: Build APK Manually
 on:
   push:
     branches: [ main, master ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # WE SWAPPED THIS PART TO THE FIX:
-      - name: Build with Buildozer
-        uses: HeaTTheatR/Buildozer-action@v1
-        id: buildozer
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          command: buildozer android debug
-          buildozer_version: master
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libffi-dev libssl-dev python3-dev openjdk-17-jdk libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
+          
+          # INSTALL THE PATCHED BUILDOZER (Fixes the 'stdout' error)
+          pip install --upgrade pip
+          pip install cython==0.29.33
+          pip install https://github.com/kivy/buildozer/archive/master.zip
+          pip install https://github.com/kivy/python-for-android/archive/master.zip
+
+      - name: Build APK
+        run: |
+          # Force accept SDK license and build
+          yes | buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
