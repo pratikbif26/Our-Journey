@@ -1,4 +1,4 @@
-name: Build APK Manually
+name: Build APK Final
 on:
   push:
     branches: [ main, master ]
@@ -16,20 +16,27 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install Dependencies
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libffi-dev libssl-dev python3-dev openjdk-17-jdk libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
-          
-          # INSTALL THE PATCHED BUILDOZER (Fixes the 'stdout' error)
+          sudo apt-get install -y libffi-dev libssl-dev python3-dev openjdk-17-jdk libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev unzip autoconf automake libtool
+
+      - name: Install Buildozer
+        run: |
           pip install --upgrade pip
-          pip install cython==0.29.33
-          pip install https://github.com/kivy/buildozer/archive/master.zip
-          pip install https://github.com/kivy/python-for-android/archive/master.zip
+          pip install --user --upgrade cython==0.29.33 virtualenv
+          pip install --user https://github.com/kivy/buildozer/archive/master.zip
+          pip install --user https://github.com/kivy/python-for-android/archive/master.zip
 
       - name: Build APK
         run: |
-          # Force accept SDK license and build
+          # FIX THE PATH so it finds buildozer
+          export PATH=$PATH:$HOME/.local/bin
+          
+          # Initialize and Build
+          buildozer init
+          
+          # Force 'yes' to license agreements
           yes | buildozer android debug
 
       - name: Upload APK
